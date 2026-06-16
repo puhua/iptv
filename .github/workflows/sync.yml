@@ -11,17 +11,22 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
         with:
-          ref: results # 切换到 results 分支
+          ref: results # 确保始终在 results 分支操作
 
       - name: Download m3u
         run: |
-          # 核心步骤：抓取目标文件
+          # 使用 curl 下载原始地址的 m3u 文件
           curl -L https://iptv-org.github.io/iptv/index.m3u -o index.m3u
 
       - name: Commit and push
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add index.m3u
-          git commit -m "Update index.m3u $(date +'%Y-%m-%d')"
-          git push origin results
+          # 如果文件有变动则提交，没有变动则跳过
+          if [ -n "$(git status --porcelain)" ]; then
+            git add index.m3u
+            git commit -m "Update index.m3u $(date +'%Y-%m-%d')"
+            git push origin results
+          else
+            echo "No changes detected."
+          fi
